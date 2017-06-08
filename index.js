@@ -2,9 +2,8 @@ import { h, app } from "hyperapp"
 import axios from "axios";
 import './app.css'
 import bookshelv from './components/bookshelv.js'
+import './toaster.css'
 
-
-const apiUrl = 'http://qllab1-api.azurewebsites.net/api/question';
 
 app({
     state: {
@@ -13,38 +12,61 @@ app({
         hasError:false,
         isLoading:false
     },
-    view: (state, actions) => (
-        <div>
-            <div className="queestion-container">
-            <h1 className="queestion-header">{state.winnerTag ? `Du ska leta efter en ${state.winnerTag}` : ''}</h1>
+    view: ({winnerTag, images, isLoading, hasError}, actions) =>{ 
+        if(isLoading) return <div className="loading">
+            <img src="http://ql-register.azurewebsites.net/images/logo.png" className="logo" alt=""/>
+        </div>;
+        return (
+            <div>
+                <div id="snackbar" className={hasError ? 'show':''}>Något gick fel</div>
+                <div className="queestion-container">
+                <h1 className="queestion-header">{winnerTag ? `Du ska leta efter en ${winnerTag}` : ''}</h1>
+                </div>
+                <div id="shelf">{images.map(({isWinner, url},i) => <img key={i} className={ isWinner ? 'winner' : ''} src={url} />)}</div>
             </div>
-            <div id="shelf">{state.images.map((img, i) => <img className={img.isWinner ? 'winner' : ''} src={img.url} />)}</div>
-        </div>
-    ),
+        );
+    },
     events:{
-        loaded: (state,action) => action.initNew()
+        loaded: (state,action) => {
+            action.mutateData({isLoading: true})
+            setInterval(()=> {
+                action.initNew()
+            },5000)
+            
+        }
     } ,
     actions: {
         mutateData: (state, actions, params) => Object.assign({}, state, params),
         api: {
             fetch: (state, actions, payload) => {
-                console.log(payload.data);
-                axios.get(apiUrl)
+                axios.get('http://qllab1-api.azurewebsites.net/api/question')
                     .then(response => 
                         actions.startGame({
                             winnerTag: response.data.winningTag,
-                            images: response.data.answers
+                            images:[
+                            {
+                                "url": "http://via.placeholder.com/1080x460"
+                            },
+                            {
+                                "url": "http://via.placeholder.com/1080x460"
+                            },
+                            {
+                                "url": "http://via.placeholder.com/1080x460"
+                            },
+                            {
+                                "url": "http://via.placeholder.com/1080x460"
+                            }
+                            ]
+                            // images: response.data.answers
                         })
                     )
                     .catch(error => {
                         actions.mutateData({
-                            isLoading:false,
-                            hasError:true
+                            isLoading: false,
+                            hasError: true
                         });
                         console.error(error);
                     });
-
-                // actions.startGame();
             }
         },
         initNew: (state, actions) => {
@@ -52,18 +74,26 @@ app({
              actions.mutateData({
                     winnerTag: null,
                     images: [],
-                    hasError:false,
-                    isLoading:true
+                    hasError:false
              });
-             actions.api.fetch({ data: 'Test' }); 
+             actions.api.fetch(); 
+             setTimeout(() => {
+                actions.presentCorrectWinner();
+             },15000)
+             
         },
-        startGame: (state, actions, payload) => {
-            console.log(payload.images);
+        presentCorrectWinner: (state, actions) => {
+             setTimeout(() => 
+                actions.initNew()
+             ,5000)
+        },
+        startGame: (state, actions, { winnerTag, images }) => 
             actions.mutateData({
-                winnerTag: payload.winnerTag,
-                images: payload.images
-            });
-        },
+                winnerTag,
+                images,
+                isLoading:false
+            })
+        ,
         resetGame: (state, actions) => actions.initNew(),
     },
 })
