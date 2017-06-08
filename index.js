@@ -9,7 +9,7 @@ app({
   view: (state, actions) => (
     <div>
       <h1>{state.winnerTag}</h1>
-      <div>{ state.images.map(img => <img src={img.url} /> )}</div>
+      <div id="shelf">{ state.images.map((img, i) => <img className={ img.isWinner ? 'winner' : '' } src={img.url} /> )}</div>
       <button onclick={actions.initNew}>Init</button>
       <button onclick={actions.startGame}>Start </button>
       <button onclick={actions.resetGame}>Reset</button>
