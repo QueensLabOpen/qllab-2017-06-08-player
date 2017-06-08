@@ -83,6 +83,7 @@ app({
              
         },
         presentCorrectWinner: (state, actions) => {
+            //TODO: show winning
              setTimeout(() => 
                 actions.initNew()
              ,5000)
