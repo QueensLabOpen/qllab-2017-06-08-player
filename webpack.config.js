@@ -16,6 +16,8 @@ module.exports = {
         }]
     },
     plugins:[
-            new HtmlWebpackPlugin()
+            new HtmlWebpackPlugin({
+
+            })
         ]
 }

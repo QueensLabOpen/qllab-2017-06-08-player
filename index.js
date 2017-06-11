@@ -1,8 +1,9 @@
-import { h, app } from "hyperapp"
-import axios from "axios";
-import './app.css'
-import bookshelv from './components/bookshelv.js'
-import './toaster.css'
+import { h, app } from 'hyperapp';
+import velocity from 'velocity-animate';
+import sizzle from 'sizzle';
+import axios from 'axios';
+import './app.css';
+import './toaster.css';
 
 
 app({
@@ -20,7 +21,7 @@ app({
             <div>
                 <div id="snackbar" className={hasError ? 'show':''}>Något gick fel</div>
                 <div className="queestion-container">
-                <h1 className="queestion-header">{winnerTag ? `Du ska leta efter en ${winnerTag}` : ''}</h1>
+                <h1 className="queestion-header">{winnerTag ? `Vart är ${winnerTag}n?` : ''}</h1>
                 </div>
                 <div id="shelf">{images.map(({isWinner, url},i) => <img key={i} className={ isWinner ? 'winner' : ''} src={url} />)}</div>
             </div>
@@ -29,12 +30,11 @@ app({
     events:{
         loaded: (state,action) => {
             action.mutateData({isLoading: true})
-            setInterval(()=> {
+            setTimeout(()=> {
                 action.initNew()
-            },5000)
-            
+            }, 5000)
         }
-    } ,
+    },
     actions: {
         mutateData: (state, actions, params) => Object.assign({}, state, params),
         api: {
@@ -43,21 +43,7 @@ app({
                     .then(response => 
                         actions.startGame({
                             winnerTag: response.data.winningTag,
-                            images:[
-                            {
-                                "url": "http://via.placeholder.com/1080x460"
-                            },
-                            {
-                                "url": "http://via.placeholder.com/1080x460"
-                            },
-                            {
-                                "url": "http://via.placeholder.com/1080x460"
-                            },
-                            {
-                                "url": "http://via.placeholder.com/1080x460"
-                            }
-                            ]
-                            // images: response.data.answers
+                            images: response.data.answers
                         })
                     )
                     .catch(error => {
@@ -79,22 +65,73 @@ app({
              actions.api.fetch(); 
              setTimeout(() => {
                 actions.presentCorrectWinner();
-             },15000)
-             
+             }, 7000)
         },
         presentCorrectWinner: (state, actions) => {
-            //TODO: show winning
-             setTimeout(() => 
+            let stop = false
+            const scaleUp = () => {
+                velocity(sizzle('.winner'), {
+                    scale: 1.1,
+                    background: '#ccc'
+                }, {
+                    duration: 300,
+                    complete () {
+                        if (!stop) {
+                            scaleDown()
+                        }
+                    }
+                })
+            }
+
+            const scaleDown = () => {
+                velocity(sizzle('.winner'), {
+                    scale: 1,
+                    background: 'transparent'
+                }, {
+                    duration: 300,
+                    complete () {
+                        if (!stop) {
+                            scaleUp()
+                        }
+                    }
+                })
+            }
+            scaleUp()
+            setTimeout(() => {
+                stop = true
                 actions.initNew()
-             ,5000)
+            }, 5000)
         },
-        startGame: (state, actions, { winnerTag, images }) => 
+        shuffle (array) {
+            let counter = array.length;
+
+            // While there are elements in the array
+            while (counter > 0) {
+                // Pick a random index
+                let index = Math.floor(Math.random() * counter);
+
+                // Decrease counter by 1
+                counter--;
+
+                // And swap the last element with it
+                let temp = array[counter];
+                array[counter] = array[index];
+                array[index] = temp;
+            }
+
+            return array;
+        },
+        startGame: (state, actions, { winnerTag, images }) => {
+            for (let i = images.length; i; i--) {
+                let j = Math.floor(Math.random() * i);
+                [images[i - 1], images[j]] = [images[j], images[i - 1]];
+            }
             actions.mutateData({
                 winnerTag,
                 images,
                 isLoading:false
             })
-        ,
+        },
         resetGame: (state, actions) => actions.initNew(),
     },
 })

@@ -13,6 +13,8 @@
     "hyperapp": "^0.9.2",
     "install": "^0.10.1",
     "npm": "^5.0.3",
+    "sizzle": "^2.3.3",
+    "velocity-animate": "^1.5.0",
     "webpack": "^2.6.1"
   },
   "devDependencies": {
